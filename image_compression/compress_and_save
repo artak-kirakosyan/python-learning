@@ -1,0 +1,37 @@
+#!/usr/bin/env python
+
+try:
+    import os
+    import sys
+
+    from PIL import Image
+except ImportError as e:
+    print(f'Error duirng importing, install all necessary libraries: {e}')
+    
+def main():
+    source_dir = sys.argv[1]
+    print(source_dir)
+
+    try:
+        os.mkdir(source_dir + "/compressed")
+    except FileExistsError as e:
+        print("Compressed directory already exists, delete it and try again")
+        sys.exit(1)
+
+    img_list = os.listdir(source_dir)
+    img_list.remove("compressed")
+
+    for img in img_list:
+        if not os.path.isfile(img):
+            continue
+        Im_file = Image.open(source_dir + "/" + img)
+        if "exif" in Im_file.info.keys():
+            Im_file.save(source_dir + "/compressed/" + img, quality=75, 
+                    optimize=True, exif=Im_file.info["exif"])
+        else:
+            Im_file.save(source_dir + "/compressed/" + img, quality=75, 
+                    optimize=True)
+
+
+if __name__ == "__main__":
+    main()
