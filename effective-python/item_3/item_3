@@ -1,0 +1,62 @@
+understand the difference between bytes, str and unicode
+
+Python3: bytes and str
+    bytes contain raw 8-bit values
+    str contain Unicode characters
+
+Python2: str and unicode
+    str are raw 8-bit values
+    unicode are unicode characters
+
+to represent unicode in raw 8-bit binary format, there are many encodings,
+most commonly UTF-8.
+
+Python3 str and python2 unicode dont have any encodings.
+To convert unicode character to binary data, use encode method
+To convert binary data to unicode, use decode
+
+Encoding and decoding should be done in the furthest boundaries of interfaces
+in the core, use str for python3 and unicode for python2 to avoid thinking 
+about encoding
+
+
+here are helper functions to convert unicode characters to binary:
+Python3:
+
+def to_str(bytes_or_str):
+    if isinstance(bytes_or_str, bytes):
+        value = bytes_or_str.decode(‘utf-8’)
+    else:
+        value = bytes_or_str
+    # Return an instance of a str
+    return value
+
+
+def to_bytes(bytes_or_str):
+    if isinstance(bytes_or_str, str):
+        value = bytes_or_str.encode(‘utf-8’)
+    else:
+        value = bytes_or_str
+    # Return instance of bytes
+    return value
+
+2 things to pay attention to:
+1. In python2 str and unicode seem to be the same type when str cotains only 7-bit ASCII characters
+    This means you can combine unicode and str with a + operator
+    You can compare str and unicode with equality/inequality operators
+    Use for string formatting
+    This wil work as long as we deal with 7-bit ASCII str's
+    In python3 bytes and str are never equivalent, and + or equality operators
+    cant be used.
+
+2. In python3 file handles(returned by open built-in function) default to UTF-8 encoding.
+    In python2 default is binary encoding. Be careful if you switch python versons
+    In python3 you have to specify 'rb' or 'wb' for binary reading and writing
+
+
+Things to remember:
+Use helper functions to transfer from str to bytes(python3) and vice versa
+
+In case of reading or writing binary data, use 'rb' or 'wb' modes
+
+

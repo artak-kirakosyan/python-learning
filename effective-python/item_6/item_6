@@ -1,0 +1,52 @@
+
+Avoid using start, end and stride in a single slice
+
+additionally to Item 5: slicing, python has an additional stride option
+
+list[start:end:n]
+this gives us every n's element of the slice start:end
+
+example: 
+a = [0, 1, 2, 3, 4, 5]
+odds = a[::2]
+evens = a[1::2]
+
+Striding sometimes can cause unexpected behavior and introduce bugs
+
+Example:
+a[::-1] gives the reverse of the sequence
+
+
+This works well for a byte strings and ASCII characters, but it breaks for Unicode
+characters encoded as UTF-8 byte strings
+
+
+What about other negative strides except -1.
+
+Example:
+a = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+a[-2::-2] = ['g', 'e', 'c', 'a']
+a[-2:2:-2] = ['g', 'e']
+a[2:2:-2] = []
+a[::2] = ['a', 'c', 'e', 'g']
+a[::-2] = ['h', 'f', 'd', 'b']
+
+As we see, using negative stride makes it extremely complex to understand.
+It is a better practice to use positive stride with only 1 of start or end, 
+or use 1 assignment to stride and the use slice
+
+example:
+b = a[::2]
+c = b[1:-1]
+
+This will create a shallow copy of the data, so try to make the first operation
+reduce the size of the slice as much as possible.
+If you are tight on memory or time, 
+consider using itertools module's islice method(item 46: use built-in algorithms
+and data structures) which does not permit negative values for start, end or stride
+
+Things to remember:
+1. Using start, end and stride in one expression can be extremely confusing
+2. Use stride with only one of start or end. Avoid negative stride if possible
+3. Avoid using all together in 1 slice. Do the slice in 2 steps: stride, then slice
+    or use built-in itertools.islice method.

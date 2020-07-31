@@ -1,0 +1,50 @@
+Follow the PEP 8 style guide
+
+The link to PEP8 https://www.python.org/dev/peps/pep-0008/
+
+Several highlights:
+Whitespaces
+-----
+1. use spaces instead of tabs
+2. use 4 spaces for each level of indentation
+3. try to keep lines shorted than 79 characters(sometimes 100 or 120)
+4. continuations of long expressions onto additional lines should be indented
+    by four extra spaces from their normal indentation level
+5. in a file, classes and functions should be separated by 2 blank lines
+6. in a class, methods should be separated by 1 blank line
+7. dont put spaces around list indexes, funciton calls or keyword argument
+    assignments
+8. put one and only one space before and after variable assignments
+Naming
+-----
+1. functions, variables and attributes should be in lowercase_underscore format.
+2. protected instance attributes should be in _leading_underscore format.
+3. private instance attributes should be in __double_leading_underscore format.
+4. classes and exceptions should be in CapitalizedWord format.
+5. Module level constants should be in ALL_CAPS format
+6. Instance Methods in classes should use self as the name of the first
+    parameter(it refers to the object)
+7. Class methods shoudl use cls as the name of the first parameter(it refers
+    to the class)
+
+Expressions and statements
+-----
+1. Use inline negation(if a is not b) insted of negation of positive expression
+    (if not a is b)
+2. dont check for empty values such as [] or "" by length(len(smth) == 0)
+    insted use "if not smth" and assume empty values implicitly evaluate to False
+3. the same applies to non-empty values such as [1,2] or 'foo'. the "if smth"
+    statement would implicitly evaluate to True for non-empty values
+4. Avoid single-line if statements, for and while loops, and except compound
+    statements. Spread these over multiple lines for clarity.
+5. Always put import statements at the top of the file.
+6. Always use absolute names for modules when importing them, not names relative
+    to the current module's own path. For example, to import foo module from 
+    bar package, you should do "from bar import foo", not just "import foo"
+7. If you must do relative imports, use the explicit syntax "from . import foo"
+8. Imports should be in sections in following order:
+    standard library modules
+    third-party modules
+    your own modules
+    Each subsection should have imports in alphabetical order
+Hint: can use Pylint or other tools to enforce PEP8 style guide

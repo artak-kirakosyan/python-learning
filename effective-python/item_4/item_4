@@ -1,0 +1,21 @@
+
+Write helper funcitons instead of complex expressions
+
+Python’s syntax makes it all too easy to write single-line expressions that are overly
+complicated and difficult to read.
+
+Move complex expressions into helper functions, especially if you need to use the
+same logic repeatedly.
+
+The if/else expression provides a more readable alternative to using Boolean
+operators like or and and in expressions
+
+An example of this is when you are trying to parse something from a string.
+If you know that what you are looking for might be of type int, or string or 
+even it might not even exist, then instead of creating a humongous one-liner
+that no-one ever is going to understand(even you after a week or so) consider
+using a helper function with a descriptive name which does everything clearly 
+in the body of the function and returns the result
+
+This way you can reuse most part of your code, it will be clean, clear and
+not discusting!

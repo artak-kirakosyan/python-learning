@@ -1,0 +1,52 @@
+
+Know how to slice sequences
+
+Python allows to access a subset of a sequence easily
+Slicing can be extended to any python class that implements the __getitem__
+and __setitem__ methods(will talk about this in item 28)
+
+most basic slicing: some_sequence[start:end], where start is inclusive, end 
+is exclusive
+
+if slicing from the start of the sequence, omit the zero
+
+list[0:4] is the same as list[:4]
+
+if slicing to the end of the sequence,  the end can be omited
+
+list[5:] == list[5:len(a)]
+
+Python also supports negative indexing
+
+list[-1] is the last item
+
+list[-3:] are the last 3 items
+
+list[2:-1] is from third to last excluded
+
+Slicing does not throw IndexError in case if incorrect indexes supplied
+
+Warning: list[-0:] results in a copy of the list
+
+Slicing generates new objects, modifying the slice does not affect the original
+list
+
+If used slices for assignment, the specified range is being replaced
+Unlike the tuple asignment (a, b = [1,2]) the length of the slice assignments 
+dont need to be the same.
+a = [1,2,3]
+a[:2] = [1,2,3,4]
+a is now [1,2,3,4,3] as the slice a[:2] was [1,2] and it is being substituted by
+[1,2,3,4]
+
+if we omit both start and end, it will result in a copy of the list.
+
+b = a[:]
+b == a results in True, but b is a results in False as b is a copy of the a.
+
+
+Summary:
+1. omit start if its 0, omit end if slicing to the end of the list
+2. slicing is forgiving of start or end indexes that are out of bounds
+3. assigning to a list slice replaces that range even if the length of the
+    list changes as a result

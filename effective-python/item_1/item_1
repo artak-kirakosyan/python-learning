@@ -1,0 +1,6 @@
+Know which version of python you are using
+ to check that, execute "python --version" or from python runtime:
+ import sys
+ print(sys.version_info)
+ print(sys.version)
+
