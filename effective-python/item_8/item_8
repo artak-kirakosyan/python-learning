@@ -1,0 +1,57 @@
+Avoid more than 2 expressions in list comprehensions
+
+List comprehensions support multiple levels of looping.
+
+matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+
+flat = [x for row in matrix for x in row]
+
+this will flatten the matrix
+
+Another example is lets say we want to sqare each element in matrix
+
+squared = [[x**2 for x in row] for row in matrix]
+
+This is a bit harder but still managable to read
+
+If we need another level of looping, then we would need to split it over
+multiple lines which is becoming comparable to regular for loop structure
+
+my_lists = [
+    [[1, 2, 3], [4, 5, 6]],
+    # ...
+    ]
+flat = [x for sublist1 in my_lists
+        for sublist2 in sublist1
+        for x in sublist2]
+
+flat = []
+for sublist1 in my_lists:
+    for sublist2 in sublist1:
+        flat.extend(sublist2)
+
+It is better to use the second option in such cases
+
+List comprehensions also support multiple if statements. 
+They are implicitly evaluated with an and expression
+
+a = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+b = [x for x in a if x > 4 if x % 2 == 0]
+c = [x for x in a if x > 4 and x % 2 == 0]
+here, b and c would yield the same result
+
+if statements can be applied to different looping levels
+
+matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+filtered = [[x for x in row if x % 3 == 0] for row in matrix if sum(row) >= 10]
+
+This might seem a good choice, but it is strongly recommended to avoid using
+such comprehension expressions. Its hard to understant
+
+The rule of thumb is to avoid using more than two expressions in a list comprehension.
+This could be two conditions, two loops, or one condition and one loop
+
+Things to remember:
+1. List comprehensions support multiple levels of loops.
+2. List comprehensions with more than 2 expressions are hard to read and should
+    be avoided.

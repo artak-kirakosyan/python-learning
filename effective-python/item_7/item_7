@@ -1,0 +1,25 @@
+List comprehensions
+
+Use list comprehensions instead of map and filter
+
+a = [1, 2, 3]
+
+squares = [x**2 for x in a]
+
+squares_map = map(lambda x: x**2, a)
+
+even_squares = [x**2 for x in a f x % 2 == 0]
+
+even_squares_filt = map(lambda x: x**2, filter(lambda x: x % 2 == 0, a))
+
+dictionaries and sets also have their lsit comprehensions
+
+new_dict = {key:value for key, value in old_dict.items()}
+
+
+Things to remember:
+1. Usually list comprehensions are clearer than map and filter
+2. List comprehensions allow to skip items easily, while map requires filter to do so
+3. Dictionaries and sets also support comprehensions
+
+
