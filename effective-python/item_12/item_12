@@ -1,0 +1,106 @@
+Item 12: Avoid else blocks after for and while loops
+
+Python loops have this feature of else after a loop which most other programming
+languages oes not. 
+for i in range(3):
+    print(i)
+else:
+    print("Else")
+
+Output:
+0
+1
+2
+Else
+
+But why is the else block being executed
+
+in if else clause, else executes if "if" doesnt.
+if try/except/else it means if except didnt work, run this.
+
+So why in case of loops it does gets executed.
+
+In case of loops, else does the opposite of what it did in other cases.
+
+It gets executed if the loop finished properly without break.
+
+for i in range(3):
+    print(i)
+    if i == 1:
+        break
+else:
+    print("Else")
+
+Output:
+0
+1
+
+As we see, the else block didnt execute.
+
+Another surprise is that else block will get executed if we loop over an
+empty sequence.
+
+for x in []:
+    print("Never runs")
+else:
+    print("Does run!!")
+
+Output:
+Does run!!
+
+Same for a while loop:
+
+while False:
+    print("Never runs")
+else:
+    print("Does run!!")
+
+Output:
+Does run!!
+
+
+The reasoning behind this approach is usually we need to see if the for loop finished or we interrupted it.
+Example: searching something in the list.
+
+Another example is when we try to find if 2 numbers are co-prime or not
+
+a = 4
+b = 9
+for i in range(2, min(a, b) + 1):
+    print(‘Testing’, i)
+    if a % i == 0 and b % i == 0:
+        print(‘Not coprime’)
+        break
+else:
+    print(‘Coprime’)
+
+Output:
+Testing 2
+Testing 3
+Testing 4
+Coprime
+
+In practice it is better to write a helper function:
+Here are 2 approaches:
+1. Return early if we find what we look for:
+def coprime(a, b):
+    for i in range(2, min(a, b) + 1):
+        if a % i == 0 and b % i == 0:
+            return False
+    return True
+
+2. Break the look by using a flag indicator.
+def coprime2(a, b):
+    is_coprime = True
+    for i in range(2, min(a, b) + 1):
+        if a % i == 0 and b % i == 0:
+            is_coprime = False
+            break
+    return is_coprime
+
+Both of these approaches are much clearer.
+
+Things to remember:
+1. we have a special and weird else blocks after loops
+2. else block runs only if loop didnt encounter a break statement
+3. AVOID USING ELSE BLOCKS

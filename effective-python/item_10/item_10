@@ -1,0 +1,22 @@
+Item 10 prefer enumerate over range
+
+Built-in range function allows to iterate over a set of integers
+
+Usually we need to iterate over a list of strings or something else.
+We can do so directly using for something in smth_list, but this gives us only elements.
+
+Often we want to iterate over elements but also know the index.
+One workaround is to use range(len(list)) and then access things inside the for loop, but there is a better way to do this:
+
+for ind, smth in enumerate(smth_list)
+
+You can also specify the starting index:
+for ind, smth in enumerate(smth_list, 1):
+
+this will generate indexes starting at 1 not at 0.
+
+Things to remember:
+1. enumerate provides concise syntax for looping over an iterator while also
+    having the index
+2. prefer enumerate instead of looping over a range and indexing
+3. we can supply second argument to enumerate to specify a number from which to begin counting(default is 0)

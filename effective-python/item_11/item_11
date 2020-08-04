@@ -1,0 +1,27 @@
+Item 11: Use zip to process iterators in parallel
+
+Sometimes it is useful to iterate over several iterators at the same time.
+
+Again, instead of iterating over one of them, and then using the current index(either using range or enumerate) to get access to other ones, python provides zip function which allows to iterate over several iterators at the same time.
+
+example:
+for i, j in zip(iter1, iter2, ..., itern):
+
+
+Be careful as in python2, zip is not a generator and it will use a lot of memory
+to create all tuples. Instead use izip from itertools(Item 46 Use built-in algorithms and data
+structures)
+
+
+One issue is the case where the iterators have different lengths.
+zip terminates the process once the shortest iterator is done.
+
+Sometimes this is a desired behavior, in other cases not.
+If needed you can use zip_longest from itertools built-in module(izip_longest for python2)
+
+Things to remember:
+1. zip can be used to iterate over multiple iterators in parallel.
+2. in python3 zip is a generator, python 2 zip is not.
+3. zip works until the shortest iterator is exhausted
+4. in case if step 3 is not proper, usse zip_longest from itertools.
+
