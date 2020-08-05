@@ -1,0 +1,95 @@
+Item 13: use try/except/else/finally
+
+There are 4 specific times we want to take action during exception.
+These cases are encapsulated into the functionality of tr, except, else and finally.
+
+Each of these are for specific cases(see item 51 define a root exception to insulate
+Callers from APIs for another example)
+---------------
+finally blocks:
+---------------
+Try/finally is used when we want to propagate the exception up, but also run 
+cleanup code even in case of exceptions.
+
+One use case is closing file handles( see item 43 for another example)
+
+handle = open("path") # May raise IOError
+
+try:
+    data = handle.read() # May raise UnicodeDecodeError
+finally:
+    handle.close() # Always runs after try
+
+any exception raised by read will always propagate up, but before that finally
+block is executed.
+
+You have to consider what types of exceptions you want to propage.
+For exampe the open command should be done outside the try block as we dont want
+to propagate UnicodeDecodeError.
+
+------------
+Else Blocks:
+------------
+use try/except/else 
+We use try/except/else to make it clear which exceptions will be handled
+by your code, and which ones will propagate up.
+If the try block didnt raise exception, the else block will get executed.
+
+The else block helps to minimize the amount of code in try block and improve readability.
+
+example:
+load json file and return the key
+
+def load_json_key(data, key):
+    try:
+        result_dict = json.loads(data) # May raise ValueError
+    except ValueError as e:
+        raise KeyError from e
+    else:
+        return result_dict[key] # May raise KeyError
+
+If data is not a valid json, the loads will raise ValueError.
+If not, then we access the key and return.
+Note that the else block itself can raise KeyError.
+If it does, the exception will be propagated up and the caller will have to 
+handle it.
+
+-------------------
+Everything togeter:
+-------------------
+
+UNDEFINED = object()
+
+def divide_json(path):
+    handle = open(path, 'r+') # May raise IOError
+    try:
+        data = handle.read()
+        op = json.loads(data) # May raise ValueError
+        value = (
+        op['numerator'] / operator['denominator'] # May raise ZeroDivisionError
+    except ZeroDivisionError as e:
+        return UNDEFINED
+    except ValueError as e:
+        return None # Invalid json
+    else:
+        op['result'] = value
+        result = json.dumps(op)
+        handle.seek(0)
+        handle.write(result) # May raise IOError
+        return value
+    fianlly:
+        handle.close() # Always runs
+
+
+This architecture allows us to handle exceptions separately, if no exceptions 
+occure, we run the else block. Even if in else block an exception is thrown, 
+the finally block will still close the file handle and then propagate the error
+
+
+Things to remember:
+1. try/fnally - run cleanup code
+2. else - minimize the code of try block and visually separate the success cae
+    from the try/except
+3. with else block we can do some additional steps in case of successful try 
+    block but before the finally block.
+
