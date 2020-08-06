@@ -1,0 +1,79 @@
+Prefer exceptions to returning None
+
+When writing funcitons, we usually might think that returning None for some 
+problematic cases is a good choice.
+The problem with that is we might misinterpret results:
+Here is an example:
+
+def divide(a, b):
+    try:
+        return a / b;
+    except ZeroDivisionError:
+        return None
+
+
+Here is how we would use it:
+result = divide(x/y)
+if result is None:
+    print("Invalid inputs")
+
+This would work fine but what is we do the chek like this:
+
+x, y = 0, 5
+result = divide(x, y)
+if not result:
+    print("invalid inputs")
+
+this is not correct as the result is 0, and the condition will evaluate to true.
+and print out "invalid inputs" message.
+
+One workaround is to return 2 values from the function: first is the success
+and the second one is the result
+
+def divide(a, b):
+    try:
+        return True, a / b
+    except ZeroDivisionError:
+        return False, None
+
+
+and use it as follows:
+success, result = divide(x, y)
+if not success:
+    print("invalid inpts")
+
+The problem with this solution is that the caller might ignore the first argument:
+_, result = divide(x, y)
+if not result:
+    print("Invalid inputs")
+
+now we are back to the same issue: result might be zero, but we will assume we had
+invalid inputs
+
+the second better way to do this is as follows:
+def divide(a, b):
+    try:
+        return a / b
+    except ZeroDivisionError as e:
+        raise ValueError("invalid inputs') from e
+
+we raise ValueError to indicate that the specified values were not proper.
+now the caller have to handle this exception.
+It is important that this behavior is documented(check item 49 Write docstrings for every function, class and module)
+
+here is how we use it
+x, y = 5, 2
+try:
+    result = divide(x, y)
+except ValueError:
+    print("Invalid inputs")
+else:
+    print("Result is %.1f' % result)
+
+
+Things to remember:
+1. Functions that return None to indicate special meaning are error prone 
+    as None, empty string and zero all evaluate to False in conditional expressions.
+2. Raise exceptions instead of returning None. The caller should handle them not you!
+DONT FORGET TO DOCUMENT THE BEHAVIOR SO THAT THE CALLER CAN HANDLE IT!!!
+
