@@ -1,0 +1,141 @@
+Be defensive when iterating over arguments
+
+When funcitons accept list as an argument, sometimes we need to iterate over
+it multiple times.
+
+Example: take the list of tourizm numbers from a country. Imagine the list contains
+the number of visitors for each city in that country.
+We want to understand what percentage each city has in the whole country.
+For that purpose we need a normalization function, to sum up and then divide the
+current number by the sum to detect the share.
+
+def normalize(numbers);
+    total = sum(numbers)
+    result = []
+    for value in numbers:
+        percent = 100 * value / total
+        result.append(percent)
+    return result
+
+
+this would work fine.
+Now we arr going to use a generator to read these numbers from a file.
+
+def read_visits(data_path):
+    with open(data_path) as f:
+        for line in f:
+            yield int(line)
+
+but when we call normalize on this data, it produces no results.
+
+The reason is that generators work only untill raising StopIteration exception
+they are basically one-time use objects.
+
+What is strange is that python built in functions dont see any difference
+between an already exhausted iterator and an empty iterator.
+
+To solve this problem you can copy the result of the iterator into a list in the
+normalize function, and then perform the operations.
+
+def normalize(numbers):
+    numbers = list(numbers)
+    total = sum(numbers)
+    result = []
+    for value in numbers:
+        percent = 100 * value / total
+        result.append(percent)
+    return result
+
+The problem with this approach is the memory issue: we are copying a list
+which could be humongous
+
+One way to solve this is to take in a function which returns a new iterator 
+every time it is called
+
+def normalize(get_iter):
+    total = sum(get_iter()) # New iterator
+    result = []
+    for value in get_iter():
+        percent = 100 * value / total
+        result.append(percent)
+    return result
+
+
+to use the normalize function, we pass in a lambda expression that calls
+the generator and produces a new iterator each time
+
+percentages = normalize(lambda: read_visits(path))
+
+This works, but come on, are you serious?
+Lets make it better
+
+
+We can create a container class that implements iterator protocol
+
+the iterator protocol is how python for loops and related expressions traverse
+the contents of the container type. When python sees a for x in foo, it actually
+calls iter(foo). the iter built-in funciton calls the foo.__iter__ method.
+
+This should return an interator object(which itself impelents the __next__ method)
+
+now the for loop repeatedly calls the next built-in function on the iterator 
+ojects until StopIteration exception is raised.
+Yes this sounds messy and complicated but bare with me, lets see where it goes.
+
+
+class ReadVisits(object):
+    def __init__(self, path):
+        self.data_path = path
+
+    def __iter__(self):
+        with open(self.data_path) as f:
+            for line in f:
+                yield int(line)
+
+Now this iterator works if we pass it directly to our normalize function
+
+visits = ReadVisits(path)
+percentages = normalize(visits)
+
+
+This works because the sum function in the normalize funciton will call the 
+ReadVisits.__iter__ method to create an iterator, and the for loop will do the
+same and create a second iterator.
+
+One downside of this approach is that it reads the input data multiple times.
+
+
+Now when we know how contains like ReadVisits work, we can write our functions 
+to test the input and check if they are just regular iterators or containers.
+
+when we call the iter built-in function on an iterator, the iterator is returned
+itself. in case of a list or a ReadVisits-like containers, every time we call
+iter() on them, they will generate a separate iterator.
+
+def normalize_defensive(numbers):
+    if iter(numbers) is iter(numbers):
+        raise TypeError("Must supply a container")
+    total = sum(numbers)
+    result = []
+    for value in numbers:
+        percent = 100 * value / total
+        result.append(percent)
+    return result
+
+
+
+Now this will raise a TypeError if a plain iterator is supplied, and work in case
+of a list or other container.
+
+Be aware that this method would read the input data multiple times!!
+
+Things to remember:
+1. Be careful when iterating over the input arguments multiple time.
+    They might be regular iterators and you will face issues
+2. You can easily define your own container by implementing __iter__ method as 
+    a generator
+3. To be defensive, you can call iter built-in method on the input twice and check
+    if it returns the same result. If so, then the input was a iterator not
+    a container(it means once you iterate over an iterator, it will exhaust itself
+    and stop yielding results further)
+

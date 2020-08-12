@@ -1,0 +1,151 @@
+Item 15: Know how closures interact with variable scope
+
+Consider an example: you want to sort a list, but you want to prioritize
+a group of elements first: example: rendering a user interface, and you want
+to prioritize important events first:
+
+a common way to do that is to pass a key argument to list's sort method.
+
+def sort_priority(values, group):
+    def helper(x):
+        if x in group:
+            return (0, x)
+        return (1, x)
+    values.sort(key=helper)
+
+
+There are multiple reasons why this works:
+1. python supports closures: functions can refer to variables from the scope
+    in which they were defined. That's why helper function is able to refer to 
+    the group variable.
+2. Functions are first-class objects in python. That means you can refer to them
+    directly, assign to variables, pass as arguments compare in expressions.
+    This is how the sort method can accept a closure function
+3. Python compares tuples as follows: first compare all items with index 0, then
+    with index 1 and so on. That's why first we place the elements in group and
+    sort them, then the once not from the group.
+
+
+
+It could be nice to have an indicator which tells if elements from high-priority
+group were found or not:
+
+def sort_priority(values, group):
+    found = False
+    def helper(x):
+        if x in group:
+            found = True
+            return (0, x)
+        return (1, x)
+    values.sort(key=helper)
+    return found
+
+If we now run this on an example:
+
+numbers = [8, 3, 1, 2, 5, 4, 7, 6]
+group = {2, 3, 5, 7}
+found = sort_priority2(numbers, group)
+print(‘Found:’, found)
+print(numbers)
+>>>
+Found: False
+[2, 3, 5, 7, 1, 4, 6, 8]
+
+
+BUt found indicator is not correct.
+When we try to reference a variable this is how python interpreter traverses the
+scope to resolve the reference:
+1. the current function's scope
+2. any enclosing scopes( like other containing functions)
+3. The scope of the module that contains the code( global scope)
+4. the built-in scope(len, str and so on)
+
+
+If none of these places have the defined variable, a NameError exception is raised.
+
+The case of assigning to a variable is different. If the variable is already 
+defined in the current scope, then it will just take on the new value.
+If the variable IS NOT FROM THE CURRENT SCOPE, python will treat that assignment
+as variable definition.
+
+the scope of the newly defined variable is the function that contains that 
+assignment.
+
+The same thing happened in our case. found just got defined in helper scope but
+the sort_priority's found didnt change.
+
+This is sometimes called scoping bug.
+This is done intentionally so that each new variable defined doest get accessible
+in the global scope. That would lead to a lot of obscure bugs.
+
+How to get data out?
+
+In python3, you can get data out of a closure using nonlocal keyword. 
+One thing to remember is that this wont work for global scope, only from an
+inner function to an outter function.
+
+here is how:
+
+def sort_priority(values, group):
+    found = False
+    def helper(x):
+        nonlocal found
+        if x in group:
+            found = True
+            return (0, x)
+        return (1, x)
+    values.sort(key=helper)
+    return found
+
+Now the result of the found is what we expect.
+This is complementary to the global statement, which sends variabels directly to
+the module scope.
+
+One thing to note is that apart from simple functions, it is hard to understand
+and follow the side effects of the nonlocal and it would be better to avoid
+using it.
+Instead, you can use a simple class to achive the same result:
+It is a little longer but much easier to read("item 23: accept functions for
+simple interfaces instead of classes") 
+
+class Sorter(object):
+    def __init__(self, group):
+        self.group = group
+        self.found = False
+
+    def __call__(self, x):
+        if x in self.group:
+            self.found = True
+            return (0, x)
+        return (1, x)
+
+sorter = Sorter(group)
+numbers.sort(key=sorter)
+
+In python 2, there is a workaround to send data out and it doest have nonlocal keyword.
+
+def sort_priority(numbers, group):
+    found = [False]
+    def helper(x):
+        if x in group:
+            found[0] = True
+            return (0, x)
+        return (1, x)
+    numbers.sort(key=helper)
+    return found[0]
+
+   
+The reason why this works is that python interpreter would access the found list from 
+the sort_priority scope, and change its state instead of creating a new one.
+This would work for a dictionary, a set or an instance of a class we have defined.
+
+
+Things to remember:
+1. Closure funcitons can refer to variables from any of the scopes in which 
+    they were defined.
+2. By default, closured can't affect enclosing scopes by assigning variables.
+3. python 3 allows to modify the encolsing scopes(except global scope) using 
+    nonlocal keyword.
+4. In python2, use mutable value (list, dict and so on.) to work around the lack of
+    the nonlocal statement
+5. Avoid using nonlocal for anything beyond simple functions

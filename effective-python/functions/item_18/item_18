@@ -1,0 +1,78 @@
+Item 18: reduce visual noise with variable positional arguments
+
+Accepting optional positional arguments can make function call more clear.
+
+example: we want to log some debug info with some additional details:
+
+def log(message, values):
+    if not values:
+        print(message)
+    else:
+        values_str = ", ".join(str(x) for x in values)
+        print("%s: %s" % (message, values_str))
+
+
+If we dont have the additional details(values is empty list), we still have to pass it in
+
+log("Hello", [])
+
+this is not very pleasant.
+
+we can skip doing this by adding an asterisk in front of the last positional argument
+
+def log(messages, *values): # the only difference
+    if not values:
+        print(message)
+    else:
+        values_str = ", ".join(str(x) for x in values)
+        print("%s: %s" % (message, values_str))
+
+
+log("Just hello")
+
+much better
+
+There are however, several issues with using *args.
+
+First of all, all arguments are turned into a tuple before passed to your funciton.
+
+this means if someone passes a generator, a tuple with all values will be created
+and then passed to your function.
+This is memory inefficient and dangerous.
+
+The second issue is that you cant add new positional arguments to your function in the future
+without migrating every caller.
+
+example: we added a sequence positional argument in front of the message
+
+def log(sequence, message, *values):
+    if not values:
+        print("%s: %s" % (sequence, message))
+    else:
+        values_str = ", ".join(str(x) for x in values)
+        print("%s: %s: %s" % (sequence, message, values_str))
+
+
+log(1, "Favorites", 7, 33) # This is okay
+output: 1: Favorites: 7, 33
+log("Favorites", 7, 33) # this wont work as intended
+output: Favorites: 7: 33
+
+
+As we see, if we dont update the previous call to the function, it will take the 7
+as the message.
+
+This type of issues are hard to traceback as the code still works without
+raising exceptions.
+To avoid this, use keyword-only arguments when you want to extend functions
+that accept *args(item 21: enforce clarity with keyword-only args)
+
+Things to remember:
+1. Functions can accept variable number of positional arguments using *args in
+    function definition
+2. Positional operators form a tuple and are being passed to your function as
+    a tuple
+3. Using * operator with a generator might cause memory issues or crashes
+4. Adding new positional parameters to functions that accept *args can introduce
+    hard-to-find bugs
+

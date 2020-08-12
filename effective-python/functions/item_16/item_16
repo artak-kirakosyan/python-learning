@@ -1,0 +1,61 @@
+Consider generators instead of returning lists
+
+Lets say we want to find the indexes of word starts in a string
+
+def index_words(text):
+    result = []
+    if text:
+        result.append(0)
+    for index, letter in enumerate(text):
+        if letter == " ":
+            result.append(index + 1)
+    return result
+
+This works fine but there are some issues:
+1. the code is dense and noisy: every time we find a result we call the append
+method.
+
+we can write this function using yield to simplify it
+
+
+def index_words_iter(text):
+    if text:
+        yield 0
+    for index, letter in enumerate(text):
+        if letter == " ":
+            yield index + 1
+
+Now the function is simpler, and we dont need to follow the operations with the
+result list.
+
+If we need the results in a list format, we can pass the generator to the 
+built-in list function.
+
+2. Second problem is that if the text is huge, we will keep all the results
+in the memory and then return it. The generator version instead, returns results
+one at a time.
+
+We can easily define a generator which would read a file handle one line at a
+time and the only memory constraint is not the length of the line
+
+def index_file(handle):
+    offset = 0
+    for line in handle:
+        if line:
+            yield offset
+        for letter in line:
+            offset += 1
+            if letter == " ":
+                yield offset
+
+
+One thing to note here is that the callers of the generator must understand that
+generators are one time use only.(item 17: be defensive when iterating over arguments
+
+Things to remember:
+1. using generators can be cleaner than returning list of accumulated results
+2. generators can produce results on arbitrarily large inputs and dont bring u
+    any memory related issues
+3. the iterator returned by the generator produces the results passed to
+    yield  in the generator's body.
+
