@@ -1,0 +1,73 @@
+Item 20: Use None and docstrings to specify dynamic default arguments
+
+Sometimes we might need to use non-static types as a keyword argument's default
+value.
+for example:
+def log(message, when=datetime.now()):
+    print("%s: %s" % (when, message))
+
+
+We might think that the when will be executed each time we call the function,
+but actually it happens only once when the module containing that function
+is loaded.
+
+To achive what we desire is to use None and to document that behavior in the docstring
+see item 49: write docstring for every function, class and module
+
+def log(message, when=None):
+    """
+        Log the message with timestamp:
+        Args:
+            message: message to log
+            when: datetiem of when the message occured.
+                Default to the present time.
+    """
+    when = datetime.now if when is None else when
+    print("%s: %s" % (when, message))
+
+
+Using None for default argument is especially important when the arguments are mutable.
+Example:
+def decode(data, default={}):
+    try:
+        return json.loads(data)
+    except ValueError:
+        return default
+
+
+foo = decode("bad data")
+foo["stuff"] = 5
+bar = decode("also bad data")
+bar["meep"] = 1
+print(foo)
+print(bar)
+
+we would expect the foo and bar to have 1 pair each, but actuall they are pointing
+to the same object( they are both equal to default)
+
+a correct implementation is:
+
+def decode(data, default=None):
+    """
+        Load JSON from a string
+        Args:
+            data: string to decode
+            default: value to return if decoding fails
+                defaults to an empty dictionary
+    """
+    if default is None:
+        default = {}
+    try:
+        return json.loads(data)
+    except ValueError:
+        return default
+
+Now this would work find.
+
+Things to remember:
+1. Default arguments are only evaluated once: durin function definition at 
+    module noad time. This can cause unexpected behavior for dynamic values
+2. Use None as the default value for keyword arguemnts that have a dynamic value.
+    Dont forget to document that behavior in the function's docstring.
+
+   
