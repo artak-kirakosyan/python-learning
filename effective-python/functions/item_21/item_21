@@ -1,0 +1,77 @@
+Enforce clarity with keyword-only arguments
+
+Passing arguments by keyword is powerful and it allows to build very powerful
+functions.
+
+For example we can build a function that divides 2 numbers and allows
+to ignore overflow or zero division exceptions.
+
+
+def safe_division(number, divisor, ignore_overflow,
+        ignore_zero_division):
+    try:
+        return number / divisor
+    except OverflowError:
+        if ignore_overflow:
+            return 0
+        else:
+            raise
+    except ZeroDivisionError:
+        if ignore_zero_division:
+            return float(‘inf’)
+        else:
+            raise
+
+The usage is pretty straight forward:
+
+# ignore overflow
+safe_division(1, 100*500, True, False)
+# ignore zero division
+safe_division(1, 0, False, True)
+
+however, the code is confusing and hard to follow.
+Instead we use default values and pass arguments by keyword
+
+def safe_division(number, divisor,
+        ignore_overflow=False,
+        ignore_zero_division=False):
+
+# Same code here
+
+now we write much more clean calls
+
+safe_division(1, 10*500, ignore_overflow=True)
+safe_division(1, 0, ignore_zero_division=True)
+
+
+As keyword arguments are optional, no-one will be forced to use them.
+The user still can call with the messy ways.
+In python3, you can demand that arguments to be specifically keyword arguments
+
+def safe_division(number, divisor, *,
+        ignore_overflow=False,
+        ignore_zero_division=False):
+ # Same code as before
+       
+
+The asterisk indicates the end of the position arguments and beggining of 
+keyword-only arguments.
+
+Now if the user tries to call the function by specifying ignore flags by position
+only, a TypeError will be raisen.
+
+
+
+As we dont care about python2 we wil skip over: in short, python2 does not 
+allow keyword-only arguments and a safe way to do is to use **kwargs, and then
+try to get ignore_* flags from kwargs dictionary
+
+
+Things to remember:
+1. Keywrod arguments make the intention of a function call more clear
+2. Use keyword-only arguments to force callers to supply keyword arguments
+    for potentially confusing functions, especially those that accept multiple
+    Boolean flags
+3. Python3 allows explicit syntax for keyword-only arguments
+4. python 2 can emulate this behavior by using **kwargs and manually raising
+    TypeError exceptions.
