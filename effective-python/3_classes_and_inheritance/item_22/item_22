@@ -1,0 +1,96 @@
+Prefer helper classes over bookkeeping with dictionaries and tuples
+
+When we are storing information, python built-in dictionaries and lists/tuples
+are super easy and comfortable to use. the ability to nest one data type into another
+makes it very attractive idea to use dictionaries for storage.
+It is important to understand where to stop and move to helper classes.
+A good example from the book is the Gradebook.
+
+Say you keep track of students grades. you add each grade into a list
+and keep the name: [grades] key value pairs in a dictionary.
+Now lets say you will need to keep grades for separate subjects per student
+
+no problem, we will keep a dictionary with the following format
+
+{ stud_name : {subject_name:[grades], sub_name_2: [grades]}}
+What a nice hierarchy right?
+NO!!!
+
+If you implemented an average_grade function on previous implementation, 
+now changing it would make the code for average_grade less readable and noisy
+
+Now imaging we want to add a weight for each grade. The nightmare goes on.
+
+
+One workaround would be to use namedtuple to store (grade, weight) as it is easier
+to work with named tuples and more obvious. However namedtuple has limitations
+and its not going to work for the whole hierarchy.
+One drawback is that you cant specify default value for a namedtuple. This is 
+very bad for a case where we have optional properties.
+
+Instead it would be a good practice to create helper classes for each level 
+from bottom to up.
+Lets say we use namedtuple for a grade. Here is an example:
+
+import collections
+Grade = collections.namedtuple(‘Grade’, (‘score’, ‘weight’))
+
+Now we can construct a class Subject that holds grades for that class
+
+class Subject(object):
+    def __init__(self):
+        self._grades = []
+
+    def report_grade(self, score, weight):
+        self._grades.append(Grade(score, weight))
+
+    def average_grade(self):
+        total, total_weight = 0, 0
+        for grade in self._grades:
+            total += grade.score * grade.weight
+            total_weight += grade.weight
+        return total / total_weight
+
+
+The next step is to write a student class which stores subject objects
+
+class Student(object):
+    def __init__(self):
+        self._subjects = {}
+
+    def subject(self, name):
+        if name not in self._subjects:
+            self._subjects[name] = Subject()
+        return self._subjects[name]
+
+    def average_grade(self):
+        total, count = 0, 0
+        for subject in self._subjects.values():
+            total += subject.average_grade()
+            count += 1
+        return total / count
+
+Last step is to create a gradebook class which would store students
+
+class Gradebook(object):
+    def __init__(self):
+        self._students = {}
+
+    def student(self, name):
+        if name not in self._students:
+            self._students[name] = Student()
+        return self._students[name]
+
+
+Now this code is much more comfortable to read, understnad and more importantly,
+extend if needed. Although it is twice longer than the implementation with 
+dictionaries
+
+
+Things to remember:
+1. Avoid making dictionaries with values that are other dicitonaries or long
+    tuples.
+2. use namedtuple for lightweight, immutable data containers before you
+    need the flexibility of a full class.
+3. move your bookkeeping code to use multiple helper classes when your internal
+    state dictionaries get complicated
