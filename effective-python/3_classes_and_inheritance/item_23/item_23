@@ -1,0 +1,132 @@
+Accept functions for Simple interfaces instead of Classes
+
+Many python built in API's allow to tweak the behavior by passing in a function.
+
+These hooks are used by the API to call your code while they are being executed.
+
+For example: list's sort method accepts key argument which allows the sort to define
+how to compare values
+
+for example, to sort names by their length: names.sort(key=lambda x: len(x))
+
+In other languages hooks are defined by an abstract class.
+In python it is easier to do by lambda functions with well defined arguments
+and return values.
+Functions are better for hooks as they are easier to define.
+
+Python allows to use functions as hooks because python has first-class functions
+This means functions can be referenced and used the same way as any other object.
+
+Now say we want to modify the behavior of the defaultdict class(see item 46:
+Use built-in algorithms and data structures" for details)
+
+This data structure allows to supply a function which will be called each time
+a missing key is accessed. The function should return the desired default value
+for the missing key.
+
+def log_missing():
+    print("Key added")
+    return 0
+
+now we can give this function to the defaultdict
+
+current = {‘green’: 12, ‘blue’: 3}
+increments = [
+    (‘red’, 5),
+    (‘blue’, 17),
+    (‘orange’, 9),
+]
+result = defaultdict(log_missing, current)
+print(‘Before:’, dict(result))
+for key, amount in increments:
+    result[key] += amount
+print(‘After: ‘, dict(result))
+
+
+The output of this code will be as follows:
+
+Before: {‘green’: 12, ‘blue’: 3}
+Key added
+Key addedAfter:
+{‘orange’: 9, ‘green’: 12, ‘blue’: 20, ‘red’: 5}
+
+
+Giving such functions to the API's makes it easy to build, test and modify the
+behavior.
+
+for example, say we want to count how many times a missing key has been accessed.
+
+
+we can use closure to achieve this(see item 15: know how closures interact with
+variable scope" for details). 
+
+def increment_with_report(current, increments):
+    added_count = 0
+
+    def missing():
+        nonlocal added_count
+        added_count += 1
+        return 0
+
+    result = defaultdict(missing, current)
+    for key, amount in increments:
+        result[key] += amount
+    return result, added_count
+
+
+Here we will get 2 for added_count even though the defaultdict had no
+idea that the missing hook maintains state.
+
+This is another reason why functions are good for hooks.
+It is easy to hide another state in a closure.
+
+
+Another way to achive this is to define a small class and keep the state
+as an attribute.
+
+class CountMissing(object):
+    def __init__(self):
+        self.added = 0
+
+    def missing(self):
+        self.added += 1
+        return 0
+
+In other languages we might have needed to change the defaultdict to be abel
+to accomodate the interface of the CountMissing, but in python thanks to the first-class 
+functions we can just pass the CountMissing.missing method directly
+
+
+counter = CountMissing()
+result = defaultdict(counter.missing, current).
+
+Using class like this is to keep a state is easier to read than with functions.
+However in isolation it's still not clear what CountMissing class is doing.
+
+
+To make things cleaner, we override the dunder __call__ special/magic method.
+
+class BetterCountMissing(object):
+    def __init__(self):
+        self.added = 0
+
+    def __call__(self):
+        self.added += 1
+        return 0
+
+counter = BetterCountMissing()
+result = defaultdict(counter, current) # counter() is equivalent to counter.__call__()
+
+
+Now it is much cleaner.
+
+Things to remember:
+1. Instead of defining and instantiating classes, functions are ofter all you 
+    need for simple interfaces between components in python
+2. references to functions and methods in python are first class, meaning they
+    can be used in expressions like any other type
+3. the __cal__ dunder method allows instances of class to be called like a regular
+    function
+4. when you need a function maintaining state, consider defining a class that
+    provides the __call__ method instead of using closures(see item 15)
+
