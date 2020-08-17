@@ -1,0 +1,156 @@
+Use @classmethod polymorpism to construct objects generically
+
+Python supports polymorphism not only for objects, but for classes as well
+
+Polymorphism is a way for multiple classes in a hierarchy to implement their own
+unique versions of a method.
+This allows many classes to fulfill the same interface or abstract class
+while providing different functionality(see item 28: inherit from 
+collections.abc for custom container types for example)
+
+lets say we need a MapReduce implementations and we want a common class
+to represent the input data.
+Here we define a class with a read method that must be implemented in its
+subclasses
+
+class InputData(object):
+    def read(self):
+        raise NotImplementedError
+
+
+class PathInputData(InputData):
+    def __init__(self, path):
+        super().__init__()
+        self.path = path
+    def read(self):
+        return open(self.path).read()
+
+We can have as many classes like PathInputData that inherit from InputData
+and implement their own read methods.
+
+The InputData and its childs are for returning some input data, no matter what
+the source is
+
+Now we will define a similar abstract class for the worker and its childs
+
+class Worker(object):
+    def __init__(self, input_data):
+        self.input_data = input_data
+        self.result = None
+    def map(self):
+        raise NotImplementedError
+    def reduce(self, other):
+    raise NotImplementedError
+
+
+here is an example of a worker interface and below is a possible child:
+
+class LineCountWorker(Worker):
+    def map(self):
+        data = self.input_data.read()
+        self.result = data.count(‘\n’)
+    def reduce(self, other):
+        self.result += other.result
+
+Now this looks great but how we are going to use them?
+
+We can define several helper functions to create input data suppliers, another
+one for creating workers.
+
+def generate_inputs(data_dir):
+    for name in os.listdir(data_dir):
+        yield PathInputData(os.path.join(data_dir, name))
+
+The one for workers is creating threads to speed up the process
+
+def execute(workers):
+    threads = [Thread(target=w.map) for w in workers]
+    for thread in threads: thread.start()
+    for thread in threads: thread.join()
+    first, rest = workers[0], workers[1:]
+    for worker in rest:
+        first.reduce(worker)
+    return first.result
+
+
+Finally we create a mapreduce, which encorporates everything
+
+def mapreduce(data_dir):
+    inputs = generate_inputs(data_dir)
+    workers = create_workers(inputs)
+    return execute(workers)
+
+
+This might seem an excellent design, but it is not at all.
+If we want to add a new type of InputData or Worker, we will have to change all
+our implementation of generate_inputs, create_workers and mapreduce
+
+
+This problem can be solved by adding a classmethod and using polymorphism.
+
+class GenericInputData(object):
+    def read(self):
+        raise NotImplementedError
+
+    @classmethod
+    def generate_inputs(cls, config):
+        raise NotImplementedError
+
+
+Classmethods can be called not only from the objects of that class, but from
+the class itself.
+
+We use the config for so that the child can have a configurable generator
+
+
+class PathInputData(GenericInputData):
+    # ...
+    def read(self):
+        return open(self.path).read()
+
+    @classmethod
+    def generate_inputs(cls, config):
+        data_dir = config[‘data_dir’]
+        for name in os.listdir(data_dir):
+            yield cls(os.path.join(data_dir, name))
+
+Similarily we can make the create_workers helper be part of the GenericWorker
+class.
+We can use the cls to create workers of the correct class
+
+class GenericWorker(object):
+    # ...
+    def map(self):
+        raise NotImplementedError
+
+    def reduce(self, other):
+        raise NotImplementedError
+
+    @classmethod
+    def create_workers(cls, input_class, config):
+        workers = []
+        for input_data in input_class.generate_inputs(config):
+        workers.append(cls(input_data))
+        return workers
+
+
+The LineCounterWorker wont be affected by the changes(just change the parent 
+class)
+
+and finally we rewrite our mapreduce
+
+def mapreduce(worker_class, input_class, config):
+    workers = worer_class.create_workers(input_class, config)
+    return execute(workers)
+
+
+Now we can write other GenericInputData and GenericWorker classes but keep 
+using the previous implementations.
+
+Things to remember:
+1. Python only supports a single constructor per class, the __init__ method.
+2.Use @classmethod decorator to define alternative constructors for your
+    classes
+3. Use class method polymorphism to provide generic ways to build and connect
+    concrete subclasses
+
